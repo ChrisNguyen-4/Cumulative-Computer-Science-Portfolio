@@ -1,0 +1,209 @@
+Results from each query:
+
+
+-- Query 1: Total visits per doctor– Find how many visits each doctor handled.
+SQL> SELECT v.doctor_id, COUNT(v.doctor_id) AS total_visits_per_doctor
+  2  FROM  Visits v
+  3  GROUP BY v.doctor_id;
+
+DOCTOR_ID  TOTAL_VISITS_PER_DOCTOR
+---------- -----------------------
+D004                             5
+D005                             1
+D002                             4
+D001                             3
+D007                             3
+D003                             2
+D006                             2
+
+7 rows selected.
+
+
+-- Query 2: Top 5 patients by total bill amount– Identify which patients owe or paid the most.
+
+SQL> SELECT *
+FROM (
+  3      SELECT p.patient_id, SUM(b.total_amount) AS total_bill_amount
+  4      FROM Patients p, Bills b, Visits v
+  5      WHERE p.patient_id = v.patient_id AND v.visit_id = b.visit_id
+  6      GROUP BY p.patient_id
+  7      ORDER BY total_bill_amount DESC
+  8  )
+  9  WHERE ROWNUM <=5;
+
+PATIENT_ID TOTAL_BILL_AMOUNT
+---------- -----------------
+P008                    2255
+P015                    1985
+P009                    1645
+P007                    1267
+P003                    1180
+
+
+
+-- Query 3: Most common diagnosis– Which diagnosis appears most frequently in the dataset?
+
+SQL> SELECT d.name, COUNT(*) AS frequency
+  2  FROM Diagnoses d
+  3  GROUP BY d.name
+  4  HAVING COUNT(*) >= ALL (
+    SELECT COUNT(*)
+  6      FROM Diagnoses d1
+  7      GROUP BY d1.name
+  8  );
+
+NAME
+--------------------------------------------------------------------------------
+ FREQUENCY
+----------
+Diabetes
+         4
+
+Fracture
+         4
+
+
+-- Query 4: Visits per city– Find the number of visits grouped by patients’ city.
+
+SQL> SELECT p.city, COUNT(*) AS frequency
+  2  FROM Patients p, Visits v
+  3  WHERE v.patient_id = p.patient_id
+  4  GROUP BY p.city;
+
+CITY                                                FREQUENCY
+-------------------------------------------------- ----------
+Boston                                                      4
+Chicago                                                     2
+New York                                                    5
+Houston                                                     9
+
+
+
+-- Query 5: Average bill per doctor– Compute the average amount due per doctor across visits
+
+SQL> SELECT v.doctor_id, AVG(b.total_amount)
+  2  FROM Visits v, Bills b
+  3  WHERE v.visit_id = b.visit_id
+  4  GROUP BY v.doctor_id
+  5  ORDER BY AVG(b.total_amount) DESC;
+
+DOCTOR_ID  AVG(B.TOTAL_AMOUNT)
+---------- -------------------
+D001                       766
+D004                       654
+D002                543.166667
+D006                     487.5
+D003                    371.25
+D007                     339.5
+D005                       112
+
+7 rows selected.
+
+
+
+-- Query 6: Patients who had unpaid bills– List patients whose bills remain unpaid.
+
+SQL> SELECT v.patient_id
+  2  FROM Visits v, Bills b
+  3  WHERE b.payment_status = 'Unpaid' AND v.visit_id = b.visit_id;
+
+PATIENT_ID
+----------
+P008
+
+
+
+-- Query 7: Doctors with patients diagnosed with Diabetes– Find doctors who treated at least one diabetic patient.
+
+SQL> SELECT v.doctor_id
+  2  FROM Visits v, Diagnoses d
+  3  WHERE v.visit_id = d.visit_id AND d.name = 'Diabetes';
+
+DOCTOR_ID
+----------
+D007
+D002
+D001
+D004
+
+
+-- Query 8: Average total bill amount by payment status– Compare average bill amounts among payment statuses (Paid, Unpaid, Pending)
+SELECT b.payment_status, AVG(b.total_amount) AS avg_bill
+
+SQL>   2  FROM Bills b
+  3  GROUP BY b.payment_status;
+
+PAYMENT_STATUS         AVG_BILL
+-------------------- ----------
+Paid                 560.666667
+Pending                   384.7
+Unpaid                      778
+
+
+-- Query 9: List visits and their diagnoses– Display each visit with patient name, doctor, and diagnosis name.
+SQL> COLUMN visit_id FORMAT A6
+SQL> COLUMN patient_first_name FORMAT A12
+SQL> COLUMN patient_last_name FORMAT A12
+SQL> COLUMN doctor_first_name FORMAT A12
+SQL> COLUMN doctor_last_name FORMAT A12
+SQL> COLUMN diagnosis_name FORMAT A20
+SQL>
+SQL> SELECT
+  2      v.visit_id,
+  3      p.first_name AS patient_first_name,
+  4      p.last_name  AS patient_last_name,
+  5      d.first_name AS doctor_first_name,
+  6      d.last_name  AS doctor_last_name,
+  7      diag.name    AS diagnosis_name
+  8  FROM Visits v, Patients p, Doctors d, Diagnoses diag
+  9  WHERE p.patient_id = v.patient_id
+ 10    AND d.doctor_id = v.doctor_id
+ 11    AND v.visit_id = diag.visit_id;
+
+VISIT_ PATIENT_FIRS PATIENT_LAST DOCTOR_FIRST DOCTOR_LAST_ DIAGNOSIS_NAME
+------ ------------ ------------ ------------ ------------ --------------------
+V008   Ava          Brown        Sophia       Patel        Diabetes
+V007   James        Green        John         Carter       Diabetes
+V006   Ava          Kim          Sophia       Patel        Flu
+V018   Michael      Kim          Emily        Zhao         Migraine
+V007   James        Green        John         Carter       Flu
+V013   Michael      Kim          Michael      Lopez        Fracture
+V016   Sophia       Lee          Robert       Singh        COVID-19
+V020   Ava          Kim          Sophia       Patel        Migraine
+V003   Sophia       Lopez        Emily        Zhao         Diabetes
+V014   Sophia       Lopez        Michael      Lopez        Fracture
+V002   Sarah        Wang         Michael      Lopez        Fracture
+
+VISIT_ PATIENT_FIRS PATIENT_LAST DOCTOR_FIRST DOCTOR_LAST_ DIAGNOSIS_NAME
+------ ------------ ------------ ------------ ------------ --------------------
+V004   Ava          Brown        Sophia       Patel        Hypertension
+V004   Ava          Brown        Sophia       Patel        Migraine
+V002   Sarah        Wang         Michael      Lopez        Diabetes
+V017   Ava          Kim          John         Carter       Anxiety
+V009   Michael      Wang         Sophia       Patel        COVID-19
+V008   Ava          Brown        Sophia       Patel        Fracture
+V013   Michael      Kim          Michael      Lopez        Hypertension
+V009   Michael      Wang         Sophia       Patel        Hypertension
+V014   Sophia       Lopez        Michael      Lopez        Flu
+
+
+
+-- Query 10: Top doctors by total billed revenue– Rank doctors by total revenue generated.
+
+SQL> SELECT v.doctor_id, SUM(b.total_amount) AS total_revenue
+  2  FROM Visits v, Bills b
+  3  WHERE v.visit_id = b.visit_id
+  4  GROUP BY v.doctor_id
+  5  ORDER BY SUM(b.total_amount) DESC;
+
+DOCTOR_ID  TOTAL_REVENUE
+---------- -------------
+D002                3259
+D006                1950
+D001                1532
+D003                1485
+D007                 679
+D004                 654
+D005                 112
+
+7 rows selected.
