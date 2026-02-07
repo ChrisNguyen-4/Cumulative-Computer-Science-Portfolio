@@ -26,8 +26,8 @@ description: >- # this means to ignore newlines until "baseurl:"
   and clean well-documented code. It includes personal and academic 
   projects showcasing my development 
   in Python, Machine Learning, C/C++, and SQL.
-baseurl: "/Cumulative-Computer-Science-Portfolio" # the subpath of your site, e.g. /blog
-url: "https://chrisnguyen-4.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "/Cumulative_CS_Portfolio" # the subpath of your site, e.g. /blog
+url: "https://chrisnguyen4.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 linkedin_username: cnguyen-cs
 # Build settings
 theme: minima
